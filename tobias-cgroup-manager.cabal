@@ -15,10 +15,12 @@ library
     exposed-modules: Application
                      Foundation
                      Import
+                     Model.CGroupModel                     
                      Settings
                      Settings.StaticFiles
                      Settings.Development
                      Handler.CGroupManager
+                     Util.CGroupUtil
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
