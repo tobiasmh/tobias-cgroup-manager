@@ -1,0 +1,10 @@
+/static StaticR Static getStatic
+
+/favicon.ico FaviconR GET
+/robots.txt RobotsR GET
+
+/list-available-cgroups/ AvailableCGroupsR GET
+
+/list-tasks-for-cgroup/#String TasksForCGroupR GET
+
+/add-task-to-cgroup/#String/#String/#String ClassifyTaskInCGroupR GET
