@@ -17,7 +17,6 @@
 module Handler.CGroupManager where
 
 import Import
-import System.Environment
 import System.Process
 import Data.List.Split
 import Data.Map()
@@ -25,6 +24,10 @@ import Data.Aeson
 import Data.Text()
 import Data.Text.Encoding
 import Data.ByteString.Lazy (toStrict)
+import System.IO.UTF8
+import Data.UUID.V1 as UUID (nextUUID)
+import qualified Data.UUID
+import Data.Maybe
 
 import Model.CGroupModel
 import Util.CGroupUtil
@@ -35,8 +38,7 @@ import Util.CGroupUtil
 --
 getAvailableCGroupsR :: Handler Text
 getAvailableCGroupsR = do
- lscgroupExecutable <- liftIO $ getEnv "LSC_GROUP_EXECUTABLE"
- result <- liftIO $ readProcess lscgroupExecutable [] ""
+ result <- liftIO $ readProcess "lscgroup" [] ""
  let sourceData = Data.List.Split.splitOn "\n" result
  let availableProcessGroupList = [AvailableProcessGroup (getSubSystem x) (getCGroup x) | x <- sourceData, x /= ""]
  let jsonResult = decodeUtf8 (toStrict (encode availableProcessGroupList))
@@ -46,9 +48,17 @@ getAvailableCGroupsR = do
 --
 -- Url pattern: http:\/\/{baseurl}\/list-tasks-for-cgroup\/{cgroup}
 -- 
+-- Unfortunately this command returns UTF8 which in some cases readProcess cannot handle, so we need to pipe the result to
+-- a file and read the result with a utf8 safe reader. The injection protection should work but is worth double checking 
+-- yourself.
 getTasksForCGroupR :: String -> Handler Text
 getTasksForCGroupR cgroupIn = do
- processResult <- liftIO $ readProcess "systemd-cgls" [cgroupIn] ""
+ uuid <- liftIO $ UUID.nextUUID -- So no collisions in tmp
+ let uuidString = Data.UUID.toString (fromJust uuid)
+ let arguments = ['"']++(safetyParse cgroupIn)++['"'] -- Stop injections of other commands
+ exitCode <- liftIO $ system ("systemd-cgls " ++ arguments ++ " > /tmp/" ++ uuidString)
+ processResult <- liftIO $ readFile ("/tmp/" ++ uuidString)
+ exitCode <- liftIO $ system ("rm /tmp/" ++ uuidString)
  let rawSourceData = Data.List.Split.splitOn "\n" processResult 
  let sourceData =  formatSourceLinePositions rawSourceData
  let processGroup = parseProcessGroup sourceData

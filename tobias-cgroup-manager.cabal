@@ -72,7 +72,7 @@ library
                  , split
                  , utf8-string
                  , containers
-
+                 , uuid
 executable         tobias-cgroup-manager
     if flag(library-only)
         Buildable: False

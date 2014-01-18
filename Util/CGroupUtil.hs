@@ -7,6 +7,15 @@ import Data.Map()
 import Data.Char(isDigit)
 import Data.Text()
 
+-- | This function ensures nothing can be injected into the calls
+safetyParse :: String -> String
+safetyParse [] = []
+safetyParse (x:xs)
+ | x `elem` ['0'..'9'] = x:safetyParse xs
+ | x `elem` [':','/','.','-',','] = x:safetyParse xs
+ | x `elem` ['A'..'z'] = x:safetyParse xs
+ | otherwise = safetyParse xs
+
 -- |Parse the subsystem component component from a subsystem:cgroup string
 getSubSystem :: String -> String
 getSubSystem [] = []
