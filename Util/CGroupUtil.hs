@@ -12,7 +12,7 @@ safetyParse :: String -> String
 safetyParse [] = []
 safetyParse (x:xs)
  | x `elem` ['0'..'9'] = x:safetyParse xs
- | x `elem` [':','/','.','-',','] = x:safetyParse xs
+ | x `elem` [':','/','.','-',',','='] = x:safetyParse xs
  | x `elem` ['A'..'z'] = x:safetyParse xs
  | otherwise = safetyParse xs
 

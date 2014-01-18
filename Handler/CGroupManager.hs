@@ -70,8 +70,11 @@ getTasksForCGroupR cgroupIn = do
 -- Url pattern: http:\/\/{baseurl}\/add-task-to-cgroup\/{subsystem}\/{cgroup}\/{taskId}
 --
 -- If the request fails an error is thrown, this results in an HTTP error code
---
+-- We need sudo access here so need to use system. The injection protection should work but is worth double checking
+-- yourself.
 getClassifyTaskInCGroupR :: String -> String -> String -> Handler String
 getClassifyTaskInCGroupR subsystemIn cgroupIn taskIdIn = do
- result <- liftIO $ readProcess "cgclassify" ["-g", subsystemIn ++ [':'] ++ cgroupIn, taskIdIn] ""
- return ("Task " ++ taskIdIn ++ " successfully classified into " ++ subsystemIn ++ [':'] ++ cgroupIn ++ result)
+ let safeCgroupLocation = ['"']++(safetyParse subsystemIn)++[':']++(safetyParse cgroupIn)++['"']
+ let safeTaskId = ['"']++(safetyParse taskIdIn)++['"'] 
+ exitCode <- liftIO $ system ("sudo cgclassify -g "++safeCgroupLocation++" "++safeTaskId)
+ return ("Task " ++ taskIdIn ++ " classified into " ++ safeCgroupLocation ++ " with exit code "++(show exitCode))
