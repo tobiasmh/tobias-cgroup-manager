@@ -48,7 +48,7 @@ getAvailableCGroupsR = do
 --
 -- Url pattern: http:\/\/{baseurl}\/list-tasks-for-cgroup\/{cgroup}
 -- 
--- Unfortunately this command returns UTF8 which in some cases readProcess cannot handle, so we need to pipe the result to
+-- Unfortunately this command returns UTF8 which in some cases readProcess cannot handle, therefore we need to pipe the result to
 -- a file and read the result with a utf8 safe reader. The injection protection should work but is worth double checking 
 -- yourself.
 getTasksForCGroupR :: String -> Handler Text
@@ -56,7 +56,7 @@ getTasksForCGroupR cgroupIn = do
  uuid <- liftIO $ UUID.nextUUID -- So no collisions in tmp
  let uuidString = Data.UUID.toString (fromJust uuid)
  let arguments = ['"']++(safetyParse cgroupIn)++['"'] -- Stop injections of other commands
- exitCode <- liftIO $ system ("systemd-cgls " ++ arguments ++ " > /tmp/" ++ uuidString)
+ exitCode <- liftIO $ system ("systemd-cgls " ++ arguments ++ " --full > /tmp/" ++ uuidString)
  processResult <- liftIO $ readFile ("/tmp/" ++ uuidString)
  exitCode <- liftIO $ system ("rm /tmp/" ++ uuidString)
  let rawSourceData = Data.List.Split.splitOn "\n" processResult 
@@ -69,9 +69,9 @@ getTasksForCGroupR cgroupIn = do
 --
 -- Url pattern: http:\/\/{baseurl}\/add-task-to-cgroup\/{subsystem}\/{cgroup}\/{taskId}
 --
--- If the request fails an error is thrown, this results in an HTTP error code
--- We need sudo access here so need to use system. The injection protection should work but is worth double checking
--- yourself.
+-- If the request fails the error code is populated into the exitCode field
+--
+-- We need sudo access here so need to use the system function which takes a straight string. The injection protection should work but is worth double checking.
 getClassifyTaskInCGroupR :: String -> String -> String -> Handler Text
 getClassifyTaskInCGroupR subsystemIn cgroupIn taskIdIn = do
  let safeCgroupLocation = ['"']++(safetyParse subsystemIn)++[':']++(safetyParse cgroupIn)++['"']

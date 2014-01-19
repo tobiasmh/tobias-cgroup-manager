@@ -45,8 +45,8 @@ parseProcessGroupChildren [] = []
 parseProcessGroupChildren (x:xs)
  | length xs == 0 = [Task taskId taskDescription]
  | length siblingsLocal == 0 = [ProcessGroup nameWithoutPosition (parseProcessGroupChildren childrenLocal)]
- | length childrenLocal == 0 = (Task (tail x) (tail x)):parseProcessGroupChildren siblingsLocal
- | otherwise = ProcessGroup x (parseProcessGroupChildren childrenLocal): parseProcessGroupChildren siblingsLocal
+ | length childrenLocal == 0 = (Task taskId taskDescription):parseProcessGroupChildren siblingsLocal
+ | otherwise = ProcessGroup nameWithoutPosition (parseProcessGroupChildren childrenLocal): parseProcessGroupChildren siblingsLocal
  where firstNumber = read ((head x):[]) :: Int
        taskId = getTaskId (tail x)
        nameWithoutPosition = tail x
@@ -83,7 +83,7 @@ getTaskDescription [] = []
 getTaskDescription (x:xs)
  | isDigit x = getTaskDescription xs
  | x == ' ' = getTaskDescription xs
- | otherwise = xs
+ | otherwise = x:xs
 
 -- |Convert indented positions to a numeric position
 formatSourceLinePositions :: [String] -> [String]
