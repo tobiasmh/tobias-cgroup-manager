@@ -77,7 +77,7 @@ getClassifyTaskInCGroupR subsystemIn cgroupIn taskIdIn = do
  let safeCgroupLocation = ['"']++(safetyParse subsystemIn)++[':']++(safetyParse cgroupIn)++['"']
  let safeTaskId = ['"']++(safetyParse taskIdIn)++['"'] 
  exitCode <- liftIO $ system ("sudo cgclassify -g "++safeCgroupLocation++" "++safeTaskId)
- let result = CGClassifyResult (show exitCode) safeTaskId safeCgroupLocation
+ let result = CGClassifyResult (show exitCode) (safetyParse taskIdIn) ((safetyParse subsystemIn)++[':']++(safetyParse cgroupIn))
  let jsonResult = decodeUtf8 (toStrict (encode result))
  return jsonResult
  
