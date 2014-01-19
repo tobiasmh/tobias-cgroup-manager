@@ -16,3 +16,6 @@ data ProcessGroup = ProcessGroup {
   id :: String, description :: String
   } deriving (Generic, Show)
 instance ToJSON ProcessGroup
+
+data CGClassifyResult = CGClassifyResult { exitCode :: String, task :: String, subsystemAndGroup :: String } deriving (Generic, Show)
+instance ToJSON CGClassifyResult

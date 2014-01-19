@@ -72,9 +72,12 @@ getTasksForCGroupR cgroupIn = do
 -- If the request fails an error is thrown, this results in an HTTP error code
 -- We need sudo access here so need to use system. The injection protection should work but is worth double checking
 -- yourself.
-getClassifyTaskInCGroupR :: String -> String -> String -> Handler String
+getClassifyTaskInCGroupR :: String -> String -> String -> Handler Text
 getClassifyTaskInCGroupR subsystemIn cgroupIn taskIdIn = do
  let safeCgroupLocation = ['"']++(safetyParse subsystemIn)++[':']++(safetyParse cgroupIn)++['"']
  let safeTaskId = ['"']++(safetyParse taskIdIn)++['"'] 
  exitCode <- liftIO $ system ("sudo cgclassify -g "++safeCgroupLocation++" "++safeTaskId)
- return ("Task " ++ taskIdIn ++ " classified into " ++ safeCgroupLocation ++ " with exit code "++(show exitCode))
+ let result = CGClassifyResult (show exitCode) safeTaskId safeCgroupLocation
+ let jsonResult = decodeUtf8 (toStrict (encode result))
+ return jsonResult
+ 
